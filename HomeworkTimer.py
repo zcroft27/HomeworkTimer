@@ -30,6 +30,7 @@ def update_timer():
     timerRunning = not timerRunning
   
 def printTotalDuration():
+    #prints total duration
     print(totalDuration)
 
 keyboard.add_hotkey('ctrl+alt+a', update_timer)
