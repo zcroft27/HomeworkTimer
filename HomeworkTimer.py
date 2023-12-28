@@ -1,16 +1,14 @@
 from datetime import datetime
-import time
 from datetime import timedelta
-import keyboard
-import sys
 from win10toast import ToastNotifier
-import json
+import keyboard, sys, json, easygui
+
 
 timerRunning = False
 start = timedelta()
 end = timedelta()
-currentDuration = timedelta()
-
+CurrentSessionDuration = timedelta()
+session_type = easygui.choicebox
 
 jsonFilePath = "data.json"
 
@@ -24,20 +22,33 @@ def log_data(duration, description, date):
     my_data.close()
 
 def update_timer():
-    global timerRunning, end, start, currentDuration
+    global timerRunning, end, start, CurrentSessionDuration, session_type
     if timerRunning:
         end = datetime.now()
         # Format the datetime object as a string with both date and time
         formatted_datetime = start.strftime("%Y-%m-%d %H:%M")
-        log_data((end-start), "2test", formatted_datetime)
-        currentDuration = (end-start)
+        CurrentSessionDuration = (end-start)
+        log_data(CurrentSessionDuration, session_type, formatted_datetime)
         updateJson()
     else:
+        session_type = prompt_for_session_type()
         start = datetime.now()
         toaster = ToastNotifier()
-        toaster.show_toast("Timer has started.", f"Task: TODO")
+        toaster.show_toast("Timer has started.", f"Task: {session_type}.")
     timerRunning = not timerRunning
-  
+
+
+def prompt_for_session_type():
+    global session_type
+    # Prompt user for session type
+    session_type = easygui.choicebox(
+        msg="Select session type",
+        title="Session Type",
+        choices=["Programming", "Research", "Lecture"]
+    )
+    return session_type
+
+
 def ToastTotalDuration(tdur, sdur):
     #prints total duration and session duration
     toaster = ToastNotifier()
@@ -48,7 +59,7 @@ def parseJsonDuration(dur):
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
 def updateJson():
-    global currentDuration
+    global CurrentSessionDuration
     with open(jsonFilePath, 'r') as jsonFile:
         jsonData = json.load(jsonFile)
 
@@ -57,22 +68,31 @@ def updateJson():
     for key in jsonData:
         if key == "Fundamentals 2":
             for innerKey in jsonData[key]:
-                if innerKey == "duration":
+                if innerKey == "Total duration":
                     oldTotalDuration = parseJsonDuration(jsonData[key][innerKey])
-                    sumDuration = currentDuration + oldTotalDuration
-                    jsonData[key]["duration"] = str(sumDuration)
-                    ToastTotalDuration(sumDuration, currentDuration)
+                    sumDuration = CurrentSessionDuration + oldTotalDuration
+                    jsonData[key]["Total duration"] = str(sumDuration)
+                    ToastTotalDuration(sumDuration, CurrentSessionDuration)
+                elif innerKey == "Programming duration" and session_type == "Programming":
+                    oldProgrammingDuration = parseJsonDuration(jsonData[key][innerKey])
+                    sumProgrammingDuration = CurrentSessionDuration + oldProgrammingDuration
+                    jsonData[key]["Programming duration"] = str(sumProgrammingDuration)
+                elif innerKey == "Lecture duration" and session_type == "Lecture":
+                    oldLectureDuration = parseJsonDuration(jsonData[key][innerKey])
+                    sumLectureDuration = CurrentSessionDuration + oldLectureDuration
+                    jsonData[key]["Lecture duration"] = str(sumLectureDuration)
+                elif innerKey == "Researching duration" and session_type == "Research":
+                    oldResearchingDuration = parseJsonDuration(jsonData[key][innerKey])
+                    sumResearchingDuration = CurrentSessionDuration + oldResearchingDuration
+                    jsonData[key]["Researching duration"] = str(sumResearchingDuration)
+
+
+                
 
     with open(jsonFilePath, 'w') as jsonFile:
         json.dump(jsonData, jsonFile, indent=2)
 
     
-
-
-#toast notification indicating timer has started
-    #toast notification indicating timer has stopped
-        # in notification, displays "press 1, 2, or 3 for homework, research, lecture" and wait for user input to close notification   
-
 def closeProgram():
     toaster = ToastNotifier()
     toaster.show_toast("Program has closed.", f"Hotkeys should be off.")
