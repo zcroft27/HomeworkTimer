@@ -41,10 +41,11 @@ def update_timer():
         restart_program()
     else:
         session_type = prompt_for_session_type()
-        start = datetime.now()
-        toaster = ToastNotifier()
-        toaster.show_toast("Timer has started.", f"Task: {session_type}.")
-    timerRunning = not timerRunning
+        if str(session_type) != "None":
+            start = datetime.now()
+            toaster = ToastNotifier()
+            toaster.show_toast("Timer has started.", f"Task: {session_type}.")
+            timerRunning = not timerRunning
 
 
 def ToastTotalDuration(tdur, sdur):
