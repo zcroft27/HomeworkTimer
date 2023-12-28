@@ -7,8 +7,8 @@ from win10toast import ToastNotifier
 import json
 
 timerRunning = False
-start = None
-end = None
+start = timedelta()
+end = timedelta()
 currentDuration = timedelta()
 
 
@@ -31,18 +31,17 @@ def update_timer():
         formatted_datetime = start.strftime("%Y-%m-%d %H:%M")
         log_data((end-start), "2test", formatted_datetime)
         currentDuration = (end-start)
-        toaster = ToastNotifier()
-        toaster.show_toast("Timer has ended.", f"Session duration: {currentDuration}")
+        updateJson()
     else:
         start = datetime.now()
         toaster = ToastNotifier()
-        toaster.show_toast("Timer has started.", "Happy working.")
+        toaster.show_toast("Timer has started.", f"Task: TODO")
     timerRunning = not timerRunning
   
-def ToastTotalDuration(dur):
-    #prints total duration
+def ToastTotalDuration(tdur, sdur):
+    #prints total duration and session duration
     toaster = ToastNotifier()
-    toaster.show_toast("Total Duration: ", str(dur))
+    toaster.show_toast(f"Total Duration: {str(tdur)}", f"Session duration: {str(sdur)}")
 
 def parseJsonDuration(dur):
     hours, minutes, seconds = map(float, dur.split(":"))
@@ -56,11 +55,13 @@ def updateJson():
     sumDuration = 0
 
     for key in jsonData:
-        if key == "duration":
-            oldTotalDuration = parseJsonDuration(jsonData["duration"])
-            sumDuration = currentDuration + oldTotalDuration
-            jsonData["duration"] = str(sumDuration)
-            ToastTotalDuration(sumDuration)
+        if key == "Fundamentals 2":
+            for innerKey in jsonData[key]:
+                if innerKey == "duration":
+                    oldTotalDuration = parseJsonDuration(jsonData[key][innerKey])
+                    sumDuration = currentDuration + oldTotalDuration
+                    jsonData[key]["duration"] = str(sumDuration)
+                    ToastTotalDuration(sumDuration, currentDuration)
 
     with open(jsonFilePath, 'w') as jsonFile:
         json.dump(jsonData, jsonFile, indent=2)
@@ -79,7 +80,6 @@ def closeProgram():
 
 keyboard.add_hotkey('ctrl+alt+a', update_timer)
 keyboard.add_hotkey('ctrl+alt+q', closeProgram)
-keyboard.add_hotkey('ctrl+alt+i', updateJson)
 keyboard.wait()
 
 
