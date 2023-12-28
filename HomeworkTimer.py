@@ -1,18 +1,26 @@
 from datetime import datetime
 from datetime import timedelta
 from win10toast import ToastNotifier
-import keyboard, sys, json, easygui
+import keyboard, sys, json, easygui, os
+
 
 
 timerRunning = False
 start = timedelta()
 end = timedelta()
 CurrentSessionDuration = timedelta()
-session_type = easygui.choicebox
+session_type = easygui
 
 jsonFilePath = "data.json"
 
-
+def prompt_for_session_type():
+    global session_type
+    # Prompt user for session type
+    session_type = easygui.choicebox(
+        msg="Select session type",
+        title="Session Type",
+        choices=["Programming", "Research", "Lecture"])
+    return session_type 
 
 def log_data(duration, description, date):
     my_data = open("my_data.txt", "a")
@@ -30,23 +38,13 @@ def update_timer():
         CurrentSessionDuration = (end-start)
         log_data(CurrentSessionDuration, session_type, formatted_datetime)
         updateJson()
+        restart_program()
     else:
         session_type = prompt_for_session_type()
         start = datetime.now()
         toaster = ToastNotifier()
         toaster.show_toast("Timer has started.", f"Task: {session_type}.")
     timerRunning = not timerRunning
-
-
-def prompt_for_session_type():
-    global session_type
-    # Prompt user for session type
-    session_type = easygui.choicebox(
-        msg="Select session type",
-        title="Session Type",
-        choices=["Programming", "Research", "Lecture"]
-    )
-    return session_type
 
 
 def ToastTotalDuration(tdur, sdur):
@@ -59,7 +57,7 @@ def parseJsonDuration(dur):
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
 def updateJson():
-    global CurrentSessionDuration
+    global CurrentSessionDuration, session_type
     with open(jsonFilePath, 'r') as jsonFile:
         jsonData = json.load(jsonFile)
 
@@ -86,9 +84,6 @@ def updateJson():
                     sumResearchingDuration = CurrentSessionDuration + oldResearchingDuration
                     jsonData[key]["Researching duration"] = str(sumResearchingDuration)
 
-
-                
-
     with open(jsonFilePath, 'w') as jsonFile:
         json.dump(jsonData, jsonFile, indent=2)
 
@@ -97,6 +92,11 @@ def closeProgram():
     toaster = ToastNotifier()
     toaster.show_toast("Program has closed.", f"Hotkeys should be off.")
     sys.exit()
+
+
+def restart_program():
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
 
 keyboard.add_hotkey('ctrl+alt+a', update_timer)
 keyboard.add_hotkey('ctrl+alt+q', closeProgram)
