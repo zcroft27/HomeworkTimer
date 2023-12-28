@@ -31,8 +31,12 @@ def update_timer():
         formatted_datetime = start.strftime("%Y-%m-%d %H:%M")
         log_data((end-start), "2test", formatted_datetime)
         currentDuration = (end-start)
+        toaster = ToastNotifier()
+        toaster.show_toast("Timer has ended.", f"Session duration: {currentDuration}")
     else:
         start = datetime.now()
+        toaster = ToastNotifier()
+        toaster.show_toast("Timer has started.", "Happy working.")
     timerRunning = not timerRunning
   
 def ToastTotalDuration(dur):
@@ -68,8 +72,13 @@ def updateJson():
     #toast notification indicating timer has stopped
         # in notification, displays "press 1, 2, or 3 for homework, research, lecture" and wait for user input to close notification   
 
+def closeProgram():
+    toaster = ToastNotifier()
+    toaster.show_toast("Program has closed.", f"Hotkeys should be off.")
+    sys.exit()
+
 keyboard.add_hotkey('ctrl+alt+a', update_timer)
-keyboard.add_hotkey('ctrl+alt+q', sys.exit)
+keyboard.add_hotkey('ctrl+alt+q', closeProgram)
 keyboard.add_hotkey('ctrl+alt+i', updateJson)
 keyboard.wait()
 
